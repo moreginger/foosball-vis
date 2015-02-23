@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>foos rankings</title>
+
+  <style type='text/css'>
+  #chart {
+    width: 1600px;
+    height: 800px;
+  }
+  </style>
+</script>
+
+
+</head>
+<body>
+  <div id="chart" class="demo-placeholder"></div>
+  <div id="legend"></div>
+  <script type='text/javascript' src='https://code.jquery.com/jquery-2.1.3.js'></script>
+  <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+  <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.time.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.navigate.min.js"></script>
+  <script type="text/javascript" src="jquery.flot.tooltip.min.js"></script>
+  <!--script type="text/javascript" src="jquery.flot.highlightSeries.js"></script-->
+  <script type='text/javascript' src="data.js"></script>
+  <script type='text/javascript'>
+  $(function() {
+    chart = $.plot("#chart", data, {
+      xaxis: {
+        mode: "time"
+      },
+      yaxis: {
+        min: 0,
+        max: 32,
+        tickSize: 4,
+        transform: function (v) { return -v; },
+        inverseTransform: function (v) { return -v; },
+        zoomRange: [1, 1],
+        panRange: [1, null]
+      },
+      series: {
+        lines: {
+          show: true
+        }
+      },
+      legend: {
+        container: $('#legend')
+      },
+      zoom: {
+        interactive: true
+      },
+      pan: {
+        interactive: true
+      },
+      grid: {
+        clickable: true,
+        hoverable: true
+      },
+      tooltip: true,
+    });
+  });
+  $("#chart").bind("plotclick", function (event, pos, item) {
+    var re = re = /\(([0-9]+,[0-9]+,[0-9]+)/;
+    var opacity = 1;
+    var seriesIdx = -1;
+    // note which item is clicked on
+    if (item) {
+      seriesIdx = item.seriesIndex;
+      opacity = 0.5;
+    }
+    // loop all the series and adjust the opacity
+    var modSeries = $.map(chart.getData(), function(series,idx) {
+      if (idx == seriesIdx){
+        color = re.exec(series.color)[1]
+        series.color = 'rgba(' + color + ',' + 1 + ')';
+        series.lines.lineWidth = 4;
+        series.lines.fill = true
+        series.lines.fillColor = 'rgba(' + color + ',' + 0.5 + ')';
+      }
+      else {
+        series.color = 'rgba(' + re.exec(series.color)[1] + ',' + opacity + ')';
+        series.lines.lineWidth = 2;
+        series.lines.fill = false
+      }
+      return series;
+    });
+    // reload the series and redraw
+    chart.setData(modSeries);
+    chart.draw();
+  });
+</script>
+</body>
+</html>
