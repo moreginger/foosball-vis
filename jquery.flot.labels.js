@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /*
-This plugin will draw labels next to the plotted points on your graph. Tested on 
-a scatter graph, may or may not work with other graph types. Best suited to 
+This plugin will draw labels next to the plotted points on your graph. Tested on
+a scatter graph, may or may not work with other graph types. Best suited to
 situations involving a smaller number of points.
 
 usage -
@@ -47,19 +47,19 @@ usage -
     </script>
 
 For each series that you want labeled you need to set showLabels to true, set labels to an array of label names (strings),
-set the labelClass to a css class you have defined for your labels and optionally set labelPlacement to one of "left", "right", 
+set the labelClass to a css class you have defined for your labels and optionally set labelPlacement to one of "left", "right",
 "above" or "below" (below by default if not specified). Placement can be fine tuned by setting the margins in your label class.
 Note: if the labelClass is not explicitly supplied in the development version of flot (> v0.7), the plugin will auto generate
 a label class as "seriesLabelx" where x is the 1-based index of the data series. I.e. the first dataseries will be seriesLabel1,
 the second seriesLabel2, etc.
 For the names, the array should be the same length as the data. If any are missing (null) then the label for that point will
 be skipped. For example, to label only the 1st and 3rd points:
-    
+
     var names = ["foo", null, "bar"];
 
 Update: Version 0.2
 
-Added support for drawing labels using canvas.fillText. The advantages are that, in theory, drawing to the canvas should be 
+Added support for drawing labels using canvas.fillText. The advantages are that, in theory, drawing to the canvas should be
 faster, but the primary reason is that in some browsers, the labels added as absolutely positioned div elements won't show up
 if you print the page. So if you want to print your graphs, you should probably use canvasRender.
 The disadvantage is that you lose the flexibility of defining the label with a CSS class.
@@ -97,7 +97,7 @@ Also, version 0.2 takes into account the radius of the data points when placing 
     }
 
     function drawSeries(plot, ctx, series) {
-        if (!series.showLabels || !(series.labelClass || series.canvasRender) || !series.labels || series.labels.length == 0) {
+        if (!series.showLabels || !(series.labelClass || series.canvasRender)) {
             return;
         }
         ctx.save();
@@ -106,12 +106,13 @@ Also, version 0.2 takes into account the radius of the data points when placing 
             ctx.font = series.cFont;
         }
 
-        for (i = 0; i < series.data.length; i++) {
-            if (series.labels[i]) {
+        for (i = series.data.length - 1; i >=0; i--) {
+            if (series.data[i]) {
                 var loc = plot.pointOffset({ x: series.data[i][0], y: series.data[i][1] });
                 var offset = plot.getPlotOffset();
                 if (loc.left > 0 && loc.left < plot.width() && loc.top > 0 && loc.top < plot.height())
-                    drawLabel(series.labels[i], loc.left, loc.top);
+                    drawLabel(series.label, loc.left, loc.top);
+                break;
             }
         }
         ctx.restore();
