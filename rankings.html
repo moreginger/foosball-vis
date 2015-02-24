@@ -66,7 +66,19 @@
             clickable: true,
             hoverable: true
           },
-          tooltip: true
+          tooltip: true,
+          tooltipOpts: {
+            content: function(label, xval, yval, item) {
+              yval = Math.round(yval)
+              lastDigit = yval % 10
+              if (yval % 100 > 10 && yval % 100 <= 13) {
+                // Hack for English number madness.
+                lastDigit = 0;
+              }
+              suffix = lastDigit == 1 ? "st" : lastDigit == 2 ? "nd" : lastDigit == 3 ? "rd" : "th";
+              return label + " " + yval + suffix;
+            }
+          }
         });
       });
       $("#chart").bind("plotclick", function (event, pos, item) {
