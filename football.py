@@ -24,8 +24,8 @@ class Game:
 
 def games():
     r = re.compile(r'(.+) ([0-9]+) (.+) ([0-9]+) ([0-9]+)')
-    # data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    data = open('ladder.txt')
+    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
+    # data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
@@ -55,7 +55,7 @@ class Player:
             extra_time = time - datetime.timedelta(1)
             extra_ranking = self.rankings[-1][0]
             popped = None
-            if self.rankings and self.rankings[-1] and self.rankings[-1][1] > extra_time and self.rankings[-1][0] != ranking:
+            while self.rankings and self.rankings[-1] and self.rankings[-1][1] > extra_time and self.rankings[-1][0] != ranking:
                 popped = self.rankings.pop(-1)
 
             if popped and self.rankings and self.rankings[-1]:
