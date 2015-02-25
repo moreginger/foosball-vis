@@ -24,6 +24,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.navigate.min.js"></script>
     <script type="text/javascript" src="jquery.flot.tooltip.min.js"></script>
     <script type="text/javascript" src="jquery.flot.labels.js"></script>
+    <script type='text/javascript' src='https://code.jquery.com/color/jquery.color-2.1.2.min.js'></script>
+    <script type='text/javascript' src='hashids.min.js'></script>
+
     <script type='text/javascript' src="data.js"></script>
     <script type='text/javascript'>
       for(i = 0; i < data.length; i++) {
@@ -32,6 +35,15 @@
         data[i].canvasRender = true;
         data[i].cColor = "#555";
       }
+
+      var huehash = new Hashids("hue", 0, "0123456789abcdef");
+      var lighthash = new Hashids("lightness", 0, "0123456789abcdef");
+      var colors = $.map(data, function (o, i) {
+        var hue = parseInt(huehash.encode(i), 16) % 360;
+        var lightness = 0.2 + (parseInt(lighthash.encode(i), 16) % 32) / 48;
+        return jQuery.Color({ hue: hue, saturation: 0.8, lightness: lightness, alpha: 1 }).toHexString();
+      });
+
       $(function() {
         chart = $.plot("#chart", data, {
           xaxis: {
@@ -53,6 +65,7 @@
               show: true
             }
           },
+          colors: colors,
           legend: {
             show: false,
           },
@@ -82,6 +95,26 @@
         });
       });
       $("#chart").bind("plotclick", function (event, pos, item) {
+        var seriesIdx = -1;
+        // note which item is clicked on
+        if (item) {
+          var seriesIdx = item.seriesIndex;
+          var modSeries = $.map(chart.getData(), function(series,idx) {
+            if (idx == seriesIdx){
+              series.lines.lineWidth = 8 - series.lines.lineWidth;
+              series.shadowSize = 8 - series.shadowSize;
+              var color = jQuery.Color(series.color);
+              series.color = color.saturation(1.8 - color.saturation()).toRgbaString();
+            }
+            return series;
+          });
+        }
+        // reload the series and redraw
+        chart.setData(modSeries);
+        chart.draw();
+      });
+      $("#fart").bind("plotclick", function (event, pos, item) {
+        // Keep area stuff as mouseover?
         var re = re = /\(([0-9]+,[0-9]+,[0-9]+)/;
         var opacity = 1;
         var seriesIdx = -1;
