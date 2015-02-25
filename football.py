@@ -23,7 +23,7 @@ class Game:
 
 
 def games():
-    r = re.compile(r'(.+) ([0-9]+) (.+) ([0-9]+) ([0-9]+)')
+    r = re.compile(r'([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)')
     data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
     # data = open('ladder.txt')
     for line in data:
