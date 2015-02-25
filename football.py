@@ -24,13 +24,20 @@ class Game:
 
 def games():
     r = re.compile(r'([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)')
-    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    # data = open('ladder.txt')
+    # data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
+    data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
             d = datetime.datetime.fromtimestamp(int(m.group(5)))
             yield Game(d, m.group(1).lower(), float(m.group(2)), m.group(3).lower(), float(m.group(4)))
+
+
+class Ranking:
+
+    def __init__(self, time, ranking):
+        self.time = time
+        self.ranking = ranking
 
 
 class Player:
@@ -49,27 +56,27 @@ class Player:
         self.games += 1
 
     def update_ranking(self, ranking, time, inactivate=False):
-        ranking_changed = self.rankings and (not self.rankings[-1] or self.rankings[-1][0] != ranking)
+        ranking_changed = self.rankings and (not self.rankings[-1] or self.rankings[-1].ranking != ranking)
         if ranking_changed and self.rankings[-1]:
             # Extra data point for nice lines up/down
             extra_time = time - datetime.timedelta(1)
-            extra_ranking = self.rankings[-1][0]
+            extra_ranking = self.rankings[-1].ranking
             popped = None
-            while self.rankings and self.rankings[-1] and self.rankings[-1][1] > extra_time and self.rankings[-1][0] != ranking:
+            while self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
 
             if popped and self.rankings and self.rankings[-1]:
                 previous = self.rankings[-1]
-                interval = time - previous[1]
-                extra_time = interval / 2 + previous[1]
+                interval = time - previous.time
+                extra_time = interval / 2 + previous.time
                 fraction = float(interval.total_seconds()) / 24 / 60 / 60 / 2
-                extra_ranking = fraction * (popped[0] - previous[0]) + previous[0]
+                extra_ranking = fraction * (popped.ranking - previous.ranking) + previous.ranking
 
             if self.rankings and self.rankings[-1]:
-                self.rankings.append((extra_ranking, extra_time))
+                self.rankings.append(Ranking(extra_time, extra_ranking))
 
         if not self.rankings or inactivate or ranking_changed:
-            self.rankings.append((ranking, time))
+            self.rankings.append(Ranking(time, ranking))
 
         if inactivate:
             self.active = False
@@ -77,7 +84,7 @@ class Player:
 
     def write_final_rank(self, time):
         if self.active and self.rankings[-1]:
-            self.rankings.append((self.rankings[-1][0], time))
+            self.rankings.append(Ranking(time, self.rankings[-1].ranking))
 
     def __str__(self):
         return self.__repr__()
@@ -145,12 +152,11 @@ def main():
 
     analysis.process_games(flush = True)
 
-    # TODO use remaining values
     dataset_tmpl = '{{label: "{name}", data: [{data}]}}'
     datasets = [
         dataset_tmpl.format(
             name=p.name,
-            data=','.join(['[{time},{elo}]'.format(time=(r[1] - __epoch__).total_seconds() * 1000, elo=r[0]) if r else 'null' for r in p.rankings])
+            data=','.join(['[{time},{elo}]'.format(time=(r.time - __epoch__).total_seconds() * 1000, elo=r.ranking) if r else 'null' for r in p.rankings])
         ) for p in analysis.players.values()
     ]
     datasets_tmpl = 'var data = [{data}];'
