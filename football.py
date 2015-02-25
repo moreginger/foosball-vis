@@ -56,26 +56,33 @@ class Player:
         self.games += 1
 
     def update_ranking(self, ranking, time, inactivate=False):
-        ranking_changed = self.rankings and (not self.rankings[-1] or self.rankings[-1].ranking != ranking)
-        if ranking_changed and self.rankings[-1]:
-            # Extra data point for nice lines up/down
+        ranking_changed = self.rankings and self.rankings[-1] and self.rankings[-1].ranking != ranking
+        if ranking_changed:
+            # Extra data point for pretty lines up/down
             extra_time = time - datetime.timedelta(1)
             extra_ranking = self.rankings[-1].ranking
             popped = None
             while self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
 
-            if popped and self.rankings and self.rankings[-1]:
-                previous = self.rankings[-1]
-                interval = time - previous.time
-                extra_time = interval / 2 + previous.time
-                fraction = float(interval.total_seconds()) / 24 / 60 / 60 / 2
-                extra_ranking = fraction * (popped.ranking - previous.ranking) + previous.ranking
+            if popped:
+                if not self.rankings or not self.rankings[-1]:
+                    # Popped the last point
+                    # First approximation: put it back
+                    # TODO: Move the line back according to imagined projection back?
+                    extra_time = popped.time
+                    extra_ranking = popped.ranking
+                else:
+                    # There is a previous point, intersect lines
+                    previous = self.rankings[-1]
+                    interval = time - previous.time
+                    extra_time = interval / 2 + previous.time
+                    fraction = float(interval.total_seconds()) / 24 / 60 / 60 / 2
+                    extra_ranking = fraction * (popped.ranking - previous.ranking) + previous.ranking
 
-            if self.rankings and self.rankings[-1]:
-                self.rankings.append(Ranking(extra_time, extra_ranking))
+            self.rankings.append(Ranking(extra_time, extra_ranking))
 
-        if not self.rankings or inactivate or ranking_changed:
+        if ranking_changed or inactivate or not self.rankings or not self.rankings[-1]:
             self.rankings.append(Ranking(time, ranking))
 
         if inactivate:
