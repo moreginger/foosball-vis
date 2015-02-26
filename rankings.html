@@ -99,19 +99,25 @@
         // note which item is clicked on
         if (item) {
           var seriesIdx = item.seriesIndex;
+          var selected = false;
           var modSeries = $.map(chart.getData(), function(series,idx) {
-            if (idx == seriesIdx){
+            if (idx == seriesIdx) {
+              series.selected = !series.selected;
               series.lines.lineWidth = 8 - series.lines.lineWidth;
               series.shadowSize = 8 - series.shadowSize;
               var color = jQuery.Color(series.color);
               series.color = color.saturation(1.8 - color.saturation()).toRgbaString();
             }
+            selected |= series.selected;
             return series;
           });
+          $.each(modSeries, function(idx, series) {
+              series.color = jQuery.Color(series.color).alpha(!selected || series.selected ? 1 : 0.2).toRgbaString();
+          });
+          // reload the series and redraw
+          chart.setData(modSeries);
+          chart.draw();
         }
-        // reload the series and redraw
-        chart.setData(modSeries);
-        chart.draw();
       });
       $("#fart").bind("plotclick", function (event, pos, item) {
         // Keep area stuff as mouseover?
