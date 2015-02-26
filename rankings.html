@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta http-equiv='content-type' content='text/html; charset=UTF-8'>
     <title>foos rankings</title>
 
     <style type='text/css'>
@@ -10,144 +10,123 @@
       height: 800px;
     }
     </style>
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css' rel='stylesheet'>
   </head>
   <body>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-12" id="chart" />
+    <div class='container-fluid'>
+      <div class='row'>
+        <div class='col-lg-12' id='chart' />
       </div>
     </div>
     <script type='text/javascript' src='https://code.jquery.com/jquery-2.1.3.js'></script>
-    <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
-    <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.time.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.navigate.min.js"></script>
-    <script type="text/javascript" src="jquery.flot.tooltip.min.js"></script>
-    <script type="text/javascript" src="jquery.flot.labels.js"></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js'></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.time.min.js'></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.navigate.min.js'></script>
+    <script type='text/javascript' src='jquery.flot.tooltip.min.js'></script>
+    <script type='text/javascript' src='jquery.flot.labels.js'></script>
     <script type='text/javascript' src='https://code.jquery.com/color/jquery.color-2.1.2.min.js'></script>
     <script type='text/javascript' src='hashids.min.js'></script>
 
-    <script type='text/javascript' src="data.js"></script>
+    <script type='text/javascript' src='data.js'></script>
     <script type='text/javascript'>
-      for(i = 0; i < data.length; i++) {
-        data[i].showLabels = true;
-        data[i].labelPlacement = "right";
-        data[i].canvasRender = true;
-        data[i].cColor = "#555";
-      }
+      function plot(data) {
+        for(i = 0; i < data.length; i++) {
+          data[i].showLabels = true;
+          data[i].labelPlacement = 'right';
+          data[i].canvasRender = true;
+          data[i].cColor = '#555';
+        }
 
-      var huehash = new Hashids("hue", 0, "0123456789abcdef");
-      var lighthash = new Hashids("lightness", 0, "0123456789abcdef");
-      var colors = $.map(data, function (o, i) {
-        var hue = parseInt(huehash.encode(i), 16) % 360;
-        var lightness = 0.2 + (parseInt(lighthash.encode(i), 16) % 32) / 48;
-        return jQuery.Color({ hue: hue, saturation: 0.8, lightness: lightness, alpha: 1 }).toHexString();
-      });
+        var huehash = new Hashids('hue', 0, '0123456789abcdef');
+        var lighthash = new Hashids('lightness', 0, '0123456789abcdef');
+        var colors = $.map(data, function (o, i) {
+          var hue = parseInt(huehash.encode(i), 16) % 360;
+          var lightness = 0.2 + (parseInt(lighthash.encode(i), 16) % 32) / 48;
+          return jQuery.Color({ hue: hue, saturation: 0.8, lightness: lightness, alpha: 1 }).toHexString();
+        });
 
-      $(function() {
-        chart = $.plot("#chart", data, {
-          xaxis: {
-            min: Date.now() - 60 * 24 * 60 * 60 * 1000,
-            max: Date.now() + 1 * 24 * 60 * 60 * 1000,
-            mode: "time"
-          },
-          yaxis: {
-            min: 0,
-            max: 32,
-            tickSize: 4,
-            transform: function (v) { return -v; },
-            inverseTransform: function (v) { return -v; },
-            zoomRange: [1, 1],
-            panRange: [0, 32]
-          },
-          series: {
-            lines: {
-              show: true
-            }
-          },
-          colors: colors,
-          legend: {
-            show: false,
-          },
-          zoom: {
-            interactive: true
-          },
-          pan: {
-            interactive: true
-          },
-          grid: {
-            clickable: true,
-            hoverable: true
-          },
-          tooltip: true,
-          tooltipOpts: {
-            content: function(label, xval, yval, item) {
-              yval = Math.round(yval)
-              lastDigit = yval % 10
-              if (yval % 100 > 10 && yval % 100 <= 13) {
-                // Hack for English number madness.
-                lastDigit = 0;
+        $(function() {
+          chart = $.plot('#chart', data, {
+            xaxis: {
+              min: Date.now() - 60 * 24 * 60 * 60 * 1000,
+              max: Date.now() + 1 * 24 * 60 * 60 * 1000,
+              mode: 'time'
+            },
+            yaxis: {
+              min: 0,
+              max: 32,
+              tickSize: 4,
+              transform: function (v) { return -v; },
+              inverseTransform: function (v) { return -v; },
+              zoomRange: [1, 1],
+              panRange: [0, 32]
+            },
+            series: {
+              lines: {
+                show: true
               }
-              suffix = lastDigit == 1 ? "st" : lastDigit == 2 ? "nd" : lastDigit == 3 ? "rd" : "th";
-              return label + " " + yval + suffix;
+            },
+            colors: colors,
+            legend: {
+              show: false,
+            },
+            zoom: {
+              interactive: true
+            },
+            pan: {
+              interactive: true
+            },
+            grid: {
+              clickable: true,
+              hoverable: true
+            },
+            tooltip: true,
+            tooltipOpts: {
+              content: function(label, xval, yval, item) {
+                yval = Math.round(yval)
+                lastDigit = yval % 10
+                if (yval % 100 > 10 && yval % 100 <= 13) {
+                  // Hack for English number madness.
+                  lastDigit = 0;
+                }
+                suffix = lastDigit == 1 ? 'st' : lastDigit == 2 ? 'nd' : lastDigit == 3 ? 'rd' : 'th';
+                return label + ' ' + yval + suffix;
+              }
             }
-          }
-        });
-      });
-      $("#chart").bind("plotclick", function (event, pos, item) {
-        var seriesIdx = -1;
-        // note which item is clicked on
-        if (item) {
-          var seriesIdx = item.seriesIndex;
-          var selected = false;
-          var modSeries = $.map(chart.getData(), function(series,idx) {
-            if (idx == seriesIdx) {
-              series.selected = !series.selected;
-              series.lines.lineWidth = 8 - series.lines.lineWidth;
-              series.shadowSize = 8 - series.shadowSize;
-              var color = jQuery.Color(series.color);
-              series.color = color.saturation(1.8 - color.saturation()).toRgbaString();
-            }
-            selected |= series.selected;
-            return series;
           });
-          $.each(modSeries, function(idx, series) {
+        });
+        $('#chart').bind('plotclick', function (event, pos, item) {
+          var seriesIdx = -1;
+          // note which item is clicked on
+          if (item) {
+            var seriesIdx = item.seriesIndex;
+            var selected = false;
+            var modSeries = $.map(chart.getData(), function(series,idx) {
+              if (idx == seriesIdx) {
+                series.selected = !series.selected;
+                series.lines.lineWidth = 8 - series.lines.lineWidth;
+                series.shadowSize = 8 - series.shadowSize;
+                var color = jQuery.Color(series.color);
+                series.color = color.saturation(1.8 - color.saturation()).toRgbaString();
+              }
+              selected |= series.selected;
+              return series;
+            });
+            $.each(modSeries, function(idx, series) {
               series.color = jQuery.Color(series.color).alpha(!selected || series.selected ? 1 : 0.2).toRgbaString();
-          });
-          // reload the series and redraw
-          chart.setData(modSeries);
-          chart.draw();
-        }
-      });
-      $("#fart").bind("plotclick", function (event, pos, item) {
-        // Keep area stuff as mouseover?
-        var re = re = /\(([0-9]+,[0-9]+,[0-9]+)/;
-        var opacity = 1;
-        var seriesIdx = -1;
-        // note which item is clicked on
-        if (item) {
-          seriesIdx = item.seriesIndex;
-          opacity = 0.5;
-        }
-        // loop all the series and adjust the opacity
-        var modSeries = $.map(chart.getData(), function(series,idx) {
-          if (idx == seriesIdx){
-            color = re.exec(series.color)[1]
-            series.color = 'rgba(' + color + ',' + 1 + ')';
-            series.lines.lineWidth = 4;
-            series.lines.fill = true
-            series.lines.fillColor = 'rgba(' + color + ',' + 0.5 + ')';
+            });
+            // reload the series and redraw
+            chart.setData(modSeries);
+            chart.draw();
           }
-          else {
-            series.color = 'rgba(' + re.exec(series.color)[1] + ',' + opacity + ')';
-            series.lines.lineWidth = 2;
-            series.lines.fill = false
-          }
-          return series;
         });
-        // reload the series and redraw
-        chart.setData(modSeries);
-        chart.draw();
+      };
+      jQuery.ajax({
+        url: 'data.json',
+        datatype: 'json',
+        success: function(data, status, jqXHR) {
+          plot(data);
+        }
       });
     </script>
   </body>

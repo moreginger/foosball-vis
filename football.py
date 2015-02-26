@@ -1,6 +1,7 @@
 import urllib2
 import re
 import datetime
+import json
 
 __epoch__ = datetime.datetime(1970, 1, 1)
 __days_lookahead__ = 60
@@ -87,7 +88,7 @@ class Player:
 
         if inactivate:
             self.active = False
-            self.rankings.append(())
+            self.rankings.append(None)
 
     def write_final_rank(self, time):
         if self.active and self.rankings[-1]:
@@ -152,6 +153,18 @@ class Analysis:
                 player.write_final_rank(game.time)
 
 
+class RankingsEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Player):
+            return {'label': obj.name, 'data': obj.rankings}
+        if isinstance(obj, Ranking):
+            return [obj.time, obj.ranking]
+        if isinstance(obj, datetime.datetime):
+            return (obj - __epoch__).total_seconds() * 1000
+        else:
+            return super(FootballJsonEncoder, self).default(obj)
+
+
 def main():
     analysis = Analysis()
     for game in games():
@@ -159,17 +172,8 @@ def main():
 
     analysis.process_games(flush = True)
 
-    dataset_tmpl = '{{label: "{name}", data: [{data}]}}'
-    datasets = [
-        dataset_tmpl.format(
-            name=p.name,
-            data=','.join(['[{time},{elo}]'.format(time=(r.time - __epoch__).total_seconds() * 1000, elo=r.ranking) if r else 'null' for r in p.rankings])
-        ) for p in analysis.players.values()
-    ]
-    datasets_tmpl = 'var data = [{data}];'
-
     with open('data.js', 'w') as f:
-        f.write(datasets_tmpl.format(data = ','.join(datasets)))
+        f.write('var data = ' + RankingsEncoder().encode(analysis.players.values()))
 
 
 if __name__ == '__main__':
