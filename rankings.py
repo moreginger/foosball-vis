@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import urllib2
 import re
 import datetime
@@ -25,8 +27,8 @@ class Game:
 
 def games():
     r = re.compile(r'([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)')
-    # data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    data = open('ladder.txt')
+    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
+    # data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
@@ -172,8 +174,8 @@ def main():
 
     analysis.process_games(flush = True)
 
-    with open('data.js', 'w') as f:
-        f.write('var data = ' + RankingsEncoder().encode(analysis.players.values()))
+    print("Content-type: application/json\n")
+    print(RankingsEncoder().encode(analysis.players.values()))
 
 
 if __name__ == '__main__':

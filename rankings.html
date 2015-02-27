@@ -26,8 +26,6 @@
     <script type='text/javascript' src='jquery.flot.labels.js'></script>
     <script type='text/javascript' src='https://code.jquery.com/color/jquery.color-2.1.2.min.js'></script>
     <script type='text/javascript' src='hashids.min.js'></script>
-
-    <script type='text/javascript' src='data.js'></script>
     <script type='text/javascript'>
       function plot(data) {
         for(i = 0; i < data.length; i++) {
@@ -122,7 +120,7 @@
         });
       };
       jQuery.ajax({
-        url: 'data.json',
+        url: 'rankings.cgi',
         datatype: 'json',
         success: function(data, status, jqXHR) {
           plot(data);
