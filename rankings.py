@@ -152,7 +152,7 @@ class Analysis:
 
         if flush:
             for player in self.players.values():
-                player.write_final_rank(game.time)
+                player.write_final_rank(datetime.datetime.now())
 
 
 class RankingsEncoder(json.JSONEncoder):
