@@ -4,9 +4,11 @@ import urllib2
 import re
 import datetime
 import json
+from shapely.geometry import LineString
 
 __epoch__ = datetime.datetime(1970, 1, 1)
 __days_lookahead__ = 60
+day_seconds = 24 * 60 * 60
 
 class Game:
 
@@ -21,19 +23,17 @@ class Game:
         return self.__repr__()
 
     def __repr__(self):
-        timestamp = int((self.time - __epoch__).total_seconds())
-        return '{time} {red} v {blue}'.format(time=timestamp, red=self.red_player, blue=self.blue_player)
+        return '{time} {red} v {blue}'.format(time=self.time, red=self.red_player, blue=self.blue_player)
 
 
 def games():
     r = re.compile(r'([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)')
-    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    # data = open('ladder.txt')
+    #data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
+    data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
-            d = datetime.datetime.fromtimestamp(int(m.group(5)))
-            yield Game(d, m.group(1).lower(), float(m.group(2)), m.group(3).lower(), float(m.group(4)))
+            yield Game(int(m.group(5)), m.group(1).lower(), float(m.group(2)), m.group(3).lower(), float(m.group(4)))
 
 
 class Ranking:
@@ -41,6 +41,12 @@ class Ranking:
     def __init__(self, time, ranking):
         self.time = time
         self.ranking = ranking
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return '%s:%s' % (self.time, self.ranking)
 
 
 class Player:
@@ -58,14 +64,14 @@ class Player:
         self.elo += delta
         self.games += 1
 
+
     def update_ranking(self, ranking, time, inactivate=False):
         ranking_changed = self.rankings and self.rankings[-1] and self.rankings[-1].ranking != ranking
         if ranking_changed:
             # Extra data point for pretty lines up/down
-            extra_time = time - datetime.timedelta(1)
-            extra_ranking = self.rankings[-1].ranking
+            extra_ranking = Ranking(time - day_seconds, self.rankings[-1].ranking)
             popped = None
-            while self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_time and self.rankings[-1].ranking != ranking:
+            while self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
 
             if popped:
@@ -73,17 +79,18 @@ class Player:
                     # Popped the last point
                     # First approximation: put it back
                     # TODO: Move the line back according to imagined projection back?
-                    extra_time = popped.time
-                    extra_ranking = popped.ranking
+                    extra_ranking = popped
                 else:
                     # There is a previous point, intersect lines
                     previous = self.rankings[-1]
-                    interval = time - previous.time
-                    extra_time = interval / 2 + previous.time
-                    fraction = float(interval.total_seconds()) / 24 / 60 / 60 / 2
-                    extra_ranking = fraction * (popped.ranking - previous.ranking) + previous.ranking
+                    line1 = LineString([(previous.time, previous.ranking), (popped.time, popped.ranking)])
+                    line2 = LineString([(extra_ranking.time, popped.ranking), (time, ranking)])
+                    geom = line1.intersection(line2)
+                    # TODO improve test!
+                    extra_ranking = Ranking(geom.x, geom.y) if geom.geom_type is 'Point' else None
 
-            self.rankings.append(Ranking(extra_time, extra_ranking))
+            if extra_ranking:
+                self.rankings.append(extra_ranking)
 
         if ranking_changed or inactivate or not self.rankings or not self.rankings[-1]:
             self.rankings.append(Ranking(time, ranking))
@@ -130,7 +137,7 @@ class Analysis:
 
     def process_games(self, time=None, flush=False):
         game = None
-        while self.games and (flush or (time - self.games[0].time).days >= __days_lookahead__):
+        while self.games and (flush or time - self.games[0].time >= __days_lookahead__ * day_seconds):
             game = self.games.pop(0)
             blue = self.get_player(game.blue_player)
             red = self.get_player(game.red_player)
@@ -152,7 +159,7 @@ class Analysis:
 
         if flush:
             for player in self.players.values():
-                player.write_final_rank(datetime.datetime.now())
+                player.write_final_rank(game.time)
 
 
 class RankingsEncoder(json.JSONEncoder):
@@ -160,9 +167,7 @@ class RankingsEncoder(json.JSONEncoder):
         if isinstance(obj, Player):
             return {'label': obj.name, 'data': obj.rankings}
         if isinstance(obj, Ranking):
-            return [obj.time, obj.ranking]
-        if isinstance(obj, datetime.datetime):
-            return (obj - __epoch__).total_seconds() * 1000
+            return [obj.time * 1000, obj.ranking]
         else:
             return super(FootballJsonEncoder, self).default(obj)
 
