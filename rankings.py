@@ -84,7 +84,7 @@ class Player:
                     # There is a previous point, intersect lines
                     previous = self.rankings[-1]
                     line1 = LineString([(previous.time, previous.ranking), (popped.time, popped.ranking)])
-                    line2 = LineString([(extra_ranking.time, popped.ranking), (time, ranking)])
+                    line2 = LineString([(extra_ranking.time + (extra_ranking.time - time), extra_ranking.ranking + (extra_ranking.ranking - ranking)), (time, ranking)])
                     geom = line1.intersection(line2)
                     # TODO improve test!
                     extra_ranking = Ranking(geom.x, geom.y) if geom.geom_type is 'Point' else None
@@ -159,7 +159,7 @@ class Analysis:
 
         if flush:
             for player in self.players.values():
-                player.write_final_rank(game.time)
+                player.write_final_rank((datetime.datetime.now() - __epoch__).total_seconds())
 
 
 class RankingsEncoder(json.JSONEncoder):
