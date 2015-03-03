@@ -136,7 +136,7 @@
         });
       };
       jQuery.ajax({
-        url: '/cgi-bin/rankings.cgi',
+        url: 'rankings.cgi',
         datatype: 'json',
         success: function(data, status, jqXHR) {
           plot(data);
