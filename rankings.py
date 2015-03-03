@@ -71,7 +71,7 @@ class Player:
             # Extra data point for pretty lines up/down
             extra_ranking = Ranking(time - day_seconds, self.rankings[-1].ranking)
             popped = None
-            while self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking:
+            if self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
 
             if popped:
