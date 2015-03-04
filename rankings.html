@@ -44,16 +44,31 @@
         });
 
         $(function() {
+          function weekendAreas(axes) {
+            var markings = [],
+              d = new Date(axes.xaxis.min);
+            d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
+            d.setUTCSeconds(0);
+            d.setUTCMinutes(0);
+            d.setUTCHours(0);
+            var i = d.getTime();
+            do {
+              markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 } });
+              i += 7 * 24 * 60 * 60 * 1000;
+            } while (i < axes.xaxis.max);
+            return markings;
+          }
           chart = $.plot('#chart', data, {
             xaxis: {
               min: Date.now() - 60 * 24 * 60 * 60 * 1000,
               max: Date.now() + 1 * 24 * 60 * 60 * 1000,
-              mode: 'time'
+              mode: 'time',
+              ticks: []
             },
             yaxis: {
               min: 0,
               max: 32,
-              tickSize: 4,
+              ticks: [],
               transform: function (v) { return -v; },
               inverseTransform: function (v) { return -v; },
               zoomRange: [1, 1],
@@ -76,7 +91,8 @@
             },
             grid: {
               clickable: true,
-              hoverable: true
+              hoverable: true,
+              markings: weekendAreas
             },
             tooltip: true,
             tooltipOpts: {
