@@ -43,6 +43,11 @@
           return jQuery.Color({ hue: hue, saturation: 0.8, lightness: lightness, alpha: 1 }).toHexString();
         });
 
+        var allData = $.map(data, function(o, _) { return o.data } );
+        allData = $.grep(allData, function(o, _) { return o != null } );
+        allData = $.map(allData, function(o, _) { return o[1] } );
+        var lowestRank = Math.ceil(Math.max.apply(null, allData));
+
         $(function() {
           function weekendAreas(axes) {
             var markings = [],
@@ -61,18 +66,18 @@
           chart = $.plot('#chart', data, {
             xaxis: {
               min: Date.now() - 60 * 24 * 60 * 60 * 1000,
-              max: Date.now() + 1 * 24 * 60 * 60 * 1000,
+              max: Date.now() + 2 * 24 * 60 * 60 * 1000,
               mode: 'time',
-              tickLength: 0
+              ticks: []
             },
             yaxis: {
               min: 0,
-              max: 32,
+              max: lowestRank,
               ticks: [],
               transform: function (v) { return -v; },
               inverseTransform: function (v) { return -v; },
               zoomRange: [1, 1],
-              panRange: [0, 32]
+              panRange: [0, lowestRank]
             },
             series: {
               lines: {
@@ -135,8 +140,9 @@
           }
         });
       };
+      var query = window.location.href.slice(window.location.href.indexOf('?') + 1);
       jQuery.ajax({
-        url: 'rankings.cgi',
+        url: 'rankings.cgi?' + query,
         datatype: 'json',
         success: function(data, status, jqXHR) {
           plot(data);

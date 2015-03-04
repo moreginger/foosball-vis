@@ -51,8 +51,9 @@ class Ranking:
 
 class Player:
 
-    def __init__(self, name):
+    def __init__(self, name, lead_in_seconds):
         self.name = name
+        self.lead_in_seconds = lead_in_seconds
         self.elo = 0.0
         self.games = 0
         self.most_recent_game = None
@@ -69,7 +70,7 @@ class Player:
         ranking_changed = self.rankings and self.rankings[-1] and self.rankings[-1].ranking != ranking
         if ranking_changed:
             # Extra data point for pretty lines up/down
-            extra_ranking = Ranking(time - 16 * 60 * 60, self.rankings[-1].ranking)
+            extra_ranking = Ranking(time - self.lead_in_seconds, self.rankings[-1].ranking)
             popped = None
             if self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
@@ -111,9 +112,10 @@ class Player:
 
 class Analysis:
 
-    def __init__(self, importance = 25, days_lookahead = 60):
+    def __init__(self, importance = 25, retire_days = 60, lead_in_seconds = 16 * 60 * 60):
         self.importance = importance
-        self.days_lookahead = days_lookahead
+        self.retire_days = retire_days
+        self.lead_in_seconds = lead_in_seconds
         self.players = {}
         self.games = []
 
@@ -121,7 +123,7 @@ class Analysis:
         if name in self.players:
             return self.players[name]
         else:
-            player = self.players[name] = Player(name)
+            player = self.players[name] = Player(name, self.lead_in_seconds)
             return player
 
     def game_played(self, new_game):
@@ -136,7 +138,7 @@ class Analysis:
         self.get_player(new_game.red_player).most_recent_game = new_game.time
 
     def process_games(self, time=None, flush=False):
-        while self.games and (flush or time - self.games[0].time >= self.days_lookahead * day_seconds):
+        while self.games and (flush or time - self.games[0].time >= self.retire_days * day_seconds):
             game = self.games.pop(0)
             blue = self.get_player(game.blue_player)
             red = self.get_player(game.red_player)
@@ -172,8 +174,8 @@ class RankingsEncoder(json.JSONEncoder):
             return super(FootballJsonEncoder, self).default(obj)
 
 
-def main():
-    analysis = Analysis()
+def main(analysis_kwargs):
+    analysis = Analysis(**analysis_kwargs)
     for game in games():
         analysis.game_played(game)
 
@@ -184,4 +186,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main({})
