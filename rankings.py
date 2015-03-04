@@ -69,12 +69,11 @@ class Player:
         ranking_changed = self.rankings and self.rankings[-1] and self.rankings[-1].ranking != ranking
         if ranking_changed:
             # Extra data point for pretty lines up/down
-            extra_ranking = Ranking(time - day_seconds, self.rankings[-1].ranking)
+            extra_ranking = Ranking(time - 16 * 60 * 60, self.rankings[-1].ranking)
             popped = None
             if self.rankings and self.rankings[-1] and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking:
                 popped = self.rankings.pop(-1)
 
-            if popped:
                 if not self.rankings or not self.rankings[-1]:
                     # Popped the last point
                     # First approximation: put it back
@@ -112,7 +111,9 @@ class Player:
 
 class Analysis:
 
-    def __init__(self):
+    def __init__(self, importance = 25, days_lookahead = 60):
+        self.importance = importance
+        self.days_lookahead = days_lookahead
         self.players = {}
         self.games = []
 
@@ -124,7 +125,6 @@ class Analysis:
             return player
 
     def game_played(self, new_game):
-
         if '-' in new_game.blue_player or '-' in new_game.red_player:
             # Filter out pdw-right etc.
             return
@@ -136,15 +136,14 @@ class Analysis:
         self.get_player(new_game.red_player).most_recent_game = new_game.time
 
     def process_games(self, time=None, flush=False):
-        game = None
-        while self.games and (flush or time - self.games[0].time >= __days_lookahead__ * day_seconds):
+        while self.games and (flush or time - self.games[0].time >= self.days_lookahead * day_seconds):
             game = self.games.pop(0)
             blue = self.get_player(game.blue_player)
             red = self.get_player(game.red_player)
 
             predict = 1 / (1 + 10 ** ((red.elo - blue.elo) / 180))
             result = game.blue_score / (game.blue_score + game.red_score)
-            delta = 25 * (result - predict)
+            delta = self.importance * (result - predict)
 
             blue.game(delta, game.time)
             red.game(-delta, game.time)
@@ -163,6 +162,7 @@ class Analysis:
 
 
 class RankingsEncoder(json.JSONEncoder):
+
     def default(self, obj):
         if isinstance(obj, Player):
             return {'label': obj.name, 'data': obj.rankings}
