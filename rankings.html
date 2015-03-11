@@ -46,7 +46,7 @@
         var allData = $.map(data, function(o, _) { return o.data } );
         allData = $.grep(allData, function(o, _) { return o != null } );
         allData = $.map(allData, function(o, _) { return o[1] } );
-        var lowestRank = Math.ceil(Math.max.apply(null, allData));
+        var lowestRank = Math.ceil(Math.max.apply(null, allData)) + 1;
 
         $(function() {
           function weekendAreas(axes) {
