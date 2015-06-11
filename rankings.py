@@ -28,8 +28,8 @@ class Game:
 
 def games():
     r = re.compile(r'^\s*([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)\s*$')
-    #data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    data = open('ladder.txt')
+    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
+    #data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
@@ -112,14 +112,17 @@ class Player:
 
 class Analysis:
 
-    def __init__(self, importance = 25, retire_days = 60, lead_in_seconds = 16 * 60 * 60):
+    def __init__(self, importance = 25, retire_days = 60, lead_in_seconds = 16 * 60 * 60, teams = {}):
         self.importance = importance
         self.retire_days = retire_days
         self.lead_in_seconds = lead_in_seconds
+        self.player_to_team = dict((v, k) for k in teams for v in teams[k])
         self.players = {}
         self.games = []
 
     def get_player(self, name):
+        if self.player_to_team: 
+            name = self.player_to_team[name] if name in self.player_to_team else 'other'
         if name in self.players:
             return self.players[name]
         else:
