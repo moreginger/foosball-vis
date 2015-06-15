@@ -109,7 +109,11 @@
                   lastDigit = 0;
                 }
                 suffix = lastDigit == 1 ? 'st' : lastDigit == 2 ? 'nd' : lastDigit == 3 ? 'rd' : 'th';
-                return label + ' ' + yval + suffix;
+                tooltip = label + ' ' + yval + suffix;
+                if (item.dataIndex === item.series.data.length - 1) {
+                  tooltip += ' (' + item.series.elo + ')';
+                }
+                return tooltip;
               }
             }
           });

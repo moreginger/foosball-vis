@@ -28,8 +28,7 @@ class Game:
 
 def games():
     r = re.compile(r'^\s*([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)\s*$')
-    data = urllib2.urlopen('http://int.corefiling.com/~aks/football/ladder.txt')
-    #data = open('ladder.txt')
+    data = open('ladder.txt')
     for line in data:
         m = r.match(line)
         if m:
@@ -170,7 +169,7 @@ class RankingsEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Player):
-            return {'label': obj.name, 'data': obj.rankings}
+            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'data': obj.rankings}
         if isinstance(obj, Ranking):
             return [obj.time * 1000, obj.ranking]
         else:
