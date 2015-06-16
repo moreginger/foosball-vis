@@ -5,34 +5,11 @@ import re
 import datetime
 import json
 from shapely.geometry import LineString
+from games import Game, games
 
 __epoch__ = datetime.datetime(1970, 1, 1)
 __days_lookahead__ = 60
 day_seconds = 24 * 60 * 60
-
-class Game:
-
-    def __init__(self, time, blue_player, blue_score, red_player, red_score):
-        self.time = time
-        self.blue_player = blue_player
-        self.blue_score = blue_score
-        self.red_player = red_player
-        self.red_score = red_score
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return '{time} {red} v {blue}'.format(time=self.time, red=self.red_player, blue=self.blue_player)
-
-
-def games():
-    r = re.compile(r'^\s*([^\s]+)\s+([0-9]+)\s+([^\s]+)\s+([0-9]+)\s+([0-9]+)\s*$')
-    data = open('ladder.txt')
-    for line in data:
-        m = r.match(line)
-        if m:
-            yield Game(int(m.group(5)), m.group(1).lower(), float(m.group(2)), m.group(3).lower(), float(m.group(4)))
 
 
 class Ranking:
@@ -129,10 +106,6 @@ class Analysis:
             return player
 
     def game_played(self, new_game):
-        if '-' in new_game.blue_player or '-' in new_game.red_player:
-            # Filter out pdw-right etc.
-            return
-
         self.process_games(time = new_game.time)
 
         self.games.append(new_game)
