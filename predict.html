@@ -5,12 +5,20 @@
   <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'
     rel='stylesheet'>
 
+  <style>
+    .chart {
+      width: 400px;
+      height: 300px
+    }
+  </style>
+
   <script src='https://code.jquery.com/jquery-2.1.3.js'></script>
   <!-- import convnetjs library -->
   <script src='convnet-min.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.symbol.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.categories.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js'></script>
 
   <!-- javascript goes here -->
 </head>
@@ -19,69 +27,16 @@
   <div>
     <select id='player-blue'></select>
     <select id='player-red'></select>
-    <input type='text' name='time' id='time'></input>
     <p id='btn-predict'
-      class='btn btn-default'
+      class='btn btn-primary'
+      disabled='disabled'
       type='button'>Predict</p>
   </div>
-  <div id='chart-dist'
-    style='width:400px;height:300px'></div>
+  <div id='bestmodeloverall'>
+    <p>Thinking...</p>
+  </div>
   <script type='text/javascript'>
-    function do_training(data) {
-      var opts = {}; // options struct
-      opts.train_ratio = 0.7;
-      opts.num_folds = 1; // number of folds to eval per candidate
-      opts.num_candidates = 20; // number of candidates to eval in parallel
-      opts.num_epochs = 10; // epochs to make through data per fold
-      opts.neurons_max = 50;
-
-      var players = $.unique($.merge($.map(data, function(g) {
-        return g.blue.name;
-      }), $.map(data, function(g) {
-        return g.red.name;
-      })));
-      players.sort();
-      $.each(players, function(i, p) {
-        $('#player-blue').append('<option value="' + p + '">' + p + '</option>');
-        $('#player-red').append('<option value="' + p + '">' + p + '</option>');
-      });
-      var results = [];
-      for (var b = 0; b <= 10; b++) {
-        var result = b + ':' + (10 - b);
-        results.push(b + ':' + (10 - b));
-        $('#row-header').append('<th>' + result + '</th>');
-      }
-
-      function hotK(elements, element) {
-        var result = [];
-        var index = elements.indexOf(element);
-        for (var i = 0; i < elements.length; i++) {
-          result.push(i === index ? 1.0 : 0.0);
-        }
-        return result;
-      }
-      var train_data = $.map(data, function(g) {
-        return new convnetjs.Vol($.merge(hotK(players, g.blue.name), hotK(players, g.red.name)));
-      });
-      // console.log(train_data);
-      var train_labels = $.map(data, function(g) {
-        return results.indexOf(g.blue.score + ':' + g.red.score);
-      });
-
-      // console.log(train_labels);
-      var magicNet = new convnetjs.MagicNet(train_data, train_labels, opts);
-      magicNet.onFinishBatch(finishedBatch); // example of setting callback for events
-
-      // start training magicNet. Every step() call all candidates train on one example
-      setInterval(function() {
-        magicNet.step();
-      }, 0);
-
-      // once at least one batch of candidates is evaluated on all folds we can do prediction!
-      function finishedBatch() {
-        console.log('finished batch...');
-      }
-
+    function plotData(data, dest) {
       var options = {
         series: {
           bars: {
@@ -106,33 +61,109 @@
           }
         }
       };
-      var initialData = $.map(results, function(o, i) {
-          return [[o, 1 / results.length]];
+
+      var cu = 0;
+      var dataCu = $.map(data, function(o, i) {
+          // Stop flattening me jquery.
+          cu += o[1];
+          return [[o[0], cu]];
       });
-      var plot = $.plot($('#chart-dist'), [ initialData ], options);
+      $.plot(dest, [ data, dataCu ], options);
+    }
+  </script>
+  <script type='text/javascript'>
+    var candidates_per_batch = 16;
+    function do_training(data) {
+      var opts = {}; // options struct
+      opts.train_ratio = 0.7;
+      opts.num_folds = 1; // number of folds to eval per candidate
+      opts.num_candidates = candidates_per_batch; // number of candidates to eval in parallel
+      opts.num_epochs = 10; // epochs to make through data per fold
+      opts.neurons_max = 50;
 
-      $('#btn-predict').click(function() {
-        // var time = parseInt($('#time').val());
-        var blue = $('#player-blue').val();
-        var red = $('#player-red').val();
+      var players = $.map(data.players, function(p) {
+        return p.name;
+      });
+      players.sort();
+      var games_by_player = [];
+      $.each(data.players, function(i, p) {
+        games_by_player[players.indexOf(p.name)] = p.games;
+      });
+      $.each(players, function(i, p) {
+        $('#player-blue').append('<option value="' + p + '">' + p + '</option>');
+        $('#player-red').append('<option value="' + p + '">' + p + '</option>');
+      });
+      var results = [];
+      for (var b = 0; b <= 10; b++) {
+        var result = b + ':' + (10 - b);
+        results.push(b + ':' + (10 - b));
+      }
 
-        var vol = new convnetjs.Vol($.merge(hotK(players, blue), hotK(players, red)));
+      function hotK(elements, element) {
+        var result = [];
+        var index = elements.indexOf(element);
+        for (var i = 0; i < elements.length; i++) {
+          result.push(i === index ? 1.0 : 0.0);
+        }
+        return result;
+      }
+      // var trueOrFalse = [ true, false ];
+      var train_data = $.map(data.games, function(g) {
+        var volData = [];
+        return new convnetjs.Vol(volData.concat.apply(volData, [ hotK(players, g.blue.name), hotK(players, g.red.name), g.blue.game / 100, g.red.game / 100 ]));
+      });
+      var train_labels = $.map(data.games, function(g) {
+        return results.indexOf(g.blue.score + ':' + g.red.score);
+      });
+
+      var magicNet = new convnetjs.MagicNet(train_data, train_labels, opts);
+      magicNet.onFinishBatch(finishedBatch); // example of setting callback for events
+
+      // start training magicNet. Every step() call all candidates train on one example
+      setInterval(function() {
+        magicNet.step();
+      }, 0);
+
+      var batches_evaluated = 0;
+      // once at least one batch of candidates is evaluated on all folds we can do prediction!
+      function finishedBatch() {
+        batches_evaluated += 1;
+        var t = '';
+        if(magicNet.evaluated_candidates.length > 0) {
+          var cm = magicNet.evaluated_candidates[0];
+          t += 'best accuracy so far: ' + cm.accv / cm.acc.length;
+          t += '<br>evaluated ' + candidates_per_batch * batches_evaluated + ' models';
+        }
+        $('#bestmodeloverall').html(t);
+
+        $('#btn-predict').removeAttr('disabled');
+      }
+
+      function plot(blue, red) {
+        var blueGames = games_by_player[players.indexOf(blue)];
+        var redGames = games_by_player[players.indexOf(red)];
+
+        var volData = [];
+        // Need to know number of games for each player.
+        var vol = new convnetjs.Vol(volData.concat.apply(volData, [ hotK(players, blue), hotK(players, red), blueGames / 100, redGames / 100 ]));
         var predicted = magicNet.predict_soft(vol);
         var data = $.map(predicted.w, function(o, i) {
             // Stop flattening me jquery.
             return [[results[i], o]];
         });
-        var cu = 0;
-        var data_cu = $.map(predicted.w, function(o, i) {
-            // Stop flattening me jquery.
-            cu += o;
-            return [[results[i], cu]];
-        });
-        plot.setData([data, data_cu]);
-        plot.setupGrid();
-        plot.draw();
-      });
+        var chartContainer = $('<div class="container-chart"/>').appendTo($('body'));
+        var chart = $('<div class="chart">').appendTo(chartContainer);
+        plotData(data, chart);
+        $('<div>blue: ' + blue + ' red: ' + red + ' predict ' + results[magicNet.predict(vol)] + '</div>').appendTo(chartContainer);
+      }
 
+      $('#btn-predict').click(function() {
+        $('div.container-chart').remove();
+        var blue = $('#player-blue').val();
+        var red = $('#player-red').val();
+        plot(blue, red);
+        plot(red, blue);
+      });
     }
 
     jQuery.ajax({
