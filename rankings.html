@@ -62,8 +62,7 @@
       var huehash = new Hashids('unicorns', 0, '0123456789abcdef');
       var lighthash = new Hashids('fairies', 0, '0123456789abcdef');
       var colors = $.map(data, function(o, i) {
-        var labelHash = o.label.hashCode();
-        console.log(labelHash);
+        var labelHash = Math.abs(o.label.hashCode());
         var hue = parseInt(huehash.encode(labelHash), 16) % 360;
         var lightness = 0.2 + (parseInt(lighthash.encode(labelHash), 16) % 32) / 48;
         return jQuery.Color({
