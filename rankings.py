@@ -97,8 +97,8 @@ class Analysis:
         self.games = []
 
     def get_player(self, name):
-        if self.player_to_team: 
-            name = self.player_to_team[name] if name in self.player_to_team else 'other'
+        if self.player_to_team:
+            name = self.player_to_team[name] if name in self.player_to_team else name
         if name in self.players:
             return self.players[name]
         else:
