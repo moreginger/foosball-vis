@@ -142,7 +142,7 @@ class RankingsEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Player):
-            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'data': obj.rankings}
+            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'data': obj.rankings, 'last': obj.most_recent_game * 1000}
         if isinstance(obj, Ranking):
             return [obj.time * 1000, obj.ranking]
         else:

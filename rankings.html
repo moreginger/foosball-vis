@@ -52,11 +52,32 @@
     };
 
     function plot(data) {
-      for (i = 0; i < data.length; i++) {
-        data[i].showLabels = true;
-        data[i].labelPlacement = 'right';
-        data[i].canvasRender = true;
-        data[i].cColor = '#555';
+      var playerCount = data.length;
+      var now = Date.now();
+      var retireMs = 1000 * 60 * 60 * 24 * 60;
+      for (i = 0; i < playerCount; i++) {
+        var aSeries = data[i];
+        aSeries.showLabels = true;
+        aSeries.labelPlacement = 'right';
+        aSeries.canvasRender = true;
+        aSeries.cColor = '#555';
+        aSeries.cPadding = 8;
+        aSeries.lines = {
+           show: true,
+        };
+        var lastDatum = aSeries.data[aSeries.data.length - 1];
+        if (lastDatum !== null) {
+	  data.push({
+	    data: [[lastDatum[0], lastDatum[1]]],
+            points: {
+              show: true,
+              radius: 5 * (aSeries.last + retireMs - Date.now()) / retireMs,
+            },
+            label: aSeries.label, 
+            canvasRender: true,
+            elo: aSeries.elo,
+	  });
+        }
       }
 
       var huehash = new Hashids('unicorns', 0, '0123456789abcdef');
@@ -123,11 +144,6 @@
             },
             zoomRange: [1, 1],
             panRange: [0, lowestRank]
-          },
-          series: {
-            lines: {
-              show: true
-            }
           },
           colors: colors,
           legend: {
