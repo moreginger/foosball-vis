@@ -107,8 +107,7 @@
 
       $(function() {
         function weekendAreas(axes) {
-          var markings = [],
-            d = new Date(axes.xaxis.min);
+          var markings = [], d = new Date(axes.xaxis.min);
           d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
           d.setUTCSeconds(0);
           d.setUTCMinutes(0);
@@ -184,12 +183,13 @@
         var seriesIdx = -1;
         // note which item is clicked on
         if (item) {
-          var seriesIdx = item.seriesIndex;
+          var seriesName = item.series.label;
           var selected = false;
           var modSeries = $.map(chart.getData(), function(series, idx) {
-            if (idx == seriesIdx) {
+            if (seriesName == series.label) {
               series.selected = !series.selected;
               series.lines.lineWidth = 8 - series.lines.lineWidth;
+              series.points.lineWidth = 8 - series.points.lineWidth;
               series.shadowSize = 8 - series.shadowSize;
               var color = jQuery.Color(series.color);
               series.color = color.saturation(1.8 - color.saturation()).toRgbaString();
