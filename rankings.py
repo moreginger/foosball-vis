@@ -15,9 +15,10 @@ day_seconds = 24 * 60 * 60
 
 class Ranking:
 
-    def __init__(self, time, ranking):
+    def __init__(self, time, ranking, hidden = False):
         self.time = time
         self.ranking = ranking
+        self.hidden = hidden
 
     def __str__(self):
         return self.__repr__()
@@ -44,16 +45,20 @@ class Player:
         return time - self.most_recent_game < self.retire_seconds
 
     def is_retired(self):
-        return self.rankings[-1].ranking == -1
+        return not self.rankings or self.rankings[-1].ranking == -1
 
     def update_ranking(self, ranking):
-        ranking_changed = self.rankings and self.rankings[-1] and self.rankings[-1].ranking != ranking.ranking
+        if self.is_retired():
+            self.__comeback__(ranking)
+            return
+
+        ranking_changed = self.rankings and self.rankings[-1].ranking != ranking.ranking
 
         if ranking_changed:
             # Extra data point for pretty lines up/down
             extra_ranking = Ranking(ranking.time - self.lead_in_seconds, self.rankings[-1].ranking)
-            popped = None
-            if self.rankings and self.rankings[-1].ranking != -1 and self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking.ranking:
+            
+            if self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking.ranking:
                 popped = self.rankings.pop(-1)
 
                 if not self.rankings:
@@ -72,9 +77,12 @@ class Player:
 
             if extra_ranking:
                 self.rankings.append(extra_ranking)
-
-        if ranking_changed or not self.rankings:
+            
             self.rankings.append(ranking)
+
+    def __comeback__(self, ranking):
+        self.rankings.append(Ranking(ranking.time - self.lead_in_seconds, ranking.ranking, hidden=True))
+        self.rankings.append(ranking)
 
     def retire(self, time):
         # TODO Should intersect this really
@@ -86,7 +94,17 @@ class Player:
         self.rankings.append(Ranking(time, -1))
 
     def write_final_rank(self, time):
-        if self.is_active(time) and self.rankings[-1]:
+        hidden_time = None
+        for r in self.rankings:
+            if r.hidden:
+                hidden_time = r.time
+            elif r.time - hidden_time < self.lead_in_seconds:
+                r.hidden = True
+        
+        # TODO still need to intersect
+        self.rankings = [r for r in self.rankings if not r.hidden]
+        
+        if self.is_active(time):
             self.rankings.append(Ranking(time, self.rankings[-1].ranking))
 
     def __str__(self):
@@ -145,10 +163,9 @@ class Analysis:
             player.update_ranking(Ranking(time, rank))
             rank +=1
 
-    def process_games(self, time=None, flush=False):
-        if flush:
-            for player in self.players.values():
-                player.write_final_rank((datetime.datetime.now() - __epoch__).total_seconds())
+    def flush_games(self):
+        for player in self.players.values():
+            player.write_final_rank((datetime.datetime.now() - __epoch__).total_seconds())
 
 
 class RankingsEncoder(json.JSONEncoder):
@@ -167,7 +184,7 @@ def main(analysis_kwargs):
     for game in games():
         analysis.game_played(game)
 
-    analysis.process_games(flush = True)
+    analysis.flush_games()
 
     print("Content-type: application/json\n")
     print(RankingsEncoder().encode(analysis.players.values()))
