@@ -57,7 +57,7 @@ class Player:
         if ranking_changed:
             # Extra data point for pretty lines up/down
             extra_ranking = Ranking(ranking.time - self.lead_in_seconds, self.rankings[-1].ranking)
-            
+
             if self.rankings[-1].time > extra_ranking.time and self.rankings[-1].ranking != ranking.ranking:
                 popped = self.rankings.pop(-1)
 
@@ -77,7 +77,7 @@ class Player:
 
             if extra_ranking:
                 self.rankings.append(extra_ranking)
-            
+
             self.rankings.append(ranking)
 
     def __comeback__(self, ranking):
@@ -94,16 +94,29 @@ class Player:
         self.rankings.append(Ranking(time, -1))
 
     def write_final_rank(self, time):
-        hidden_time = None
+        comeback_time = None
+        hidden_rankings = None
         for r in self.rankings:
             if r.hidden:
-                hidden_time = r.time
-            elif r.time - hidden_time < self.lead_in_seconds:
+                comeback_time = r.time + self.lead_in_seconds
+                hidden_rankings = [r]
+            elif r.time < comeback_time:
+                hidden_rankings.append(r)
                 r.hidden = True
-        
-        # TODO still need to intersect
+            elif hidden_rankings:
+                # Intersect fun :)
+                line1 = LineString([(hidden_rankings[-1].time, hidden_rankings[-1].ranking), (r.time, r.ranking)])
+                max_rank = max(hidden_rankings[-1].ranking, r.ranking)
+                min_rank = min(hidden_rankings[-1].ranking, r.ranking)
+                line2 = LineString([(comeback_time, max_rank), (comeback_time, min_rank)])
+                geom = line1.intersection(line2)
+                hidden_rankings[-1].time = comeback_time
+                hidden_rankings[-1].ranking = geom.y
+                hidden_rankings[-1].hidden = False
+                hidden_rankings = None
+
         self.rankings = [r for r in self.rankings if not r.hidden]
-        
+
         if self.is_active(time):
             self.rankings.append(Ranking(time, self.rankings[-1].ranking))
 
