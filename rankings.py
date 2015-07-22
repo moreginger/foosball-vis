@@ -176,16 +176,20 @@ class Analysis:
             player.update_ranking(Ranking(time, rank))
             rank +=1
 
-    def flush_games(self):
+    def flush_games(self, now):
         for player in self.players.values():
-            player.write_final_rank((datetime.datetime.now() - __epoch__).total_seconds())
+            player.write_final_rank(now)
 
 
 class RankingsEncoder(json.JSONEncoder):
 
+    def __init__(self, now):
+        super(RankingsEncoder, self).__init__()
+        self.now = now 
+
     def default(self, obj):
         if isinstance(obj, Player):
-            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'data': obj.rankings, 'last': obj.most_recent_game * 1000}
+            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'active': obj.is_active(self.now), 'data': obj.rankings, 'last': obj.most_recent_game * 1000}
         if isinstance(obj, Ranking):
             return [obj.time * 1000, obj.ranking] if obj.ranking != -1 else None
         else:
@@ -196,11 +200,11 @@ def main(analysis_kwargs):
     analysis = Analysis(**analysis_kwargs)
     for game in games():
         analysis.game_played(game)
-
-    analysis.flush_games()
+    now = (datetime.datetime.now() - __epoch__).total_seconds()
+    analysis.flush_games(now)
 
     print("Content-type: application/json\n")
-    print(RankingsEncoder().encode(analysis.players.values()))
+    print(RankingsEncoder(now).encode(analysis.players.values()))
 
 
 if __name__ == '__main__':
