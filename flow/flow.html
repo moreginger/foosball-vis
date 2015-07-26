@@ -23,14 +23,9 @@
     </div>
   </div>
   <script src="https://jspm.io/system@0.16.js"></script>
+  <script src="http://marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
   <script src="code.js"></script>
   <script src="games.js"></script>
-  <script type='text/javascript'>
-    System.import('npm:cytoscape').catch(function(_) {
-      // Fails due to import of childprocess on a browser, hence catch not then.
-      cyto(document.getElementById('chart'), elements(games));
-    });
-  </script>
   <script type='text/javascript'>
     var url = 'http://salaca.int.corefiling.com:8000/games.cgi?view=json&from=' + Math.floor(Date.now() / 1000 - 60 * 24 * 60 * 60);
     console.log(url);

@@ -1,5 +1,11 @@
+System.import('npm:cytoscape').catch(function(_) {
+  // Fails due to import of childprocess on a browser, hence catch not then.
+  cyto(document.getElementById('chart'), elements(games));
+});
+
 function elements(data) {
   var rels = {};
+
   rels.getRel = function(p1, p2) {
     var name = p1 > p2 ? p1 + ":" + p2 : p2 + ":" + p1;
     if (!(name in rels)) {
@@ -70,8 +76,9 @@ function cyto(e, elements) {
     container: e,
 
     layout: {
-      name: 'cose',
-      padding: 10
+      name: 'cola',
+      padding: 10,
+      infinite: true,
     },
 
     style: cytoscape.stylesheet()
