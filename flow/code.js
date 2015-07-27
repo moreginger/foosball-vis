@@ -19,12 +19,6 @@ function elements(data) {
     rel.flow += flow;
   });
 
-  var players = [];
-  players.addPlayer = function(p) {
-    if (players.indexOf(p) === -1) {
-      players.push(p);
-    }
-  };
   var edges = [];
   for (key in rels) {
     // TODO: remove stupid hack. Added method isOwnProperty so we need to skip.
@@ -33,11 +27,6 @@ function elements(data) {
     }
     var r = rels[key];
     var absFlow = Math.abs(r.flow);
-    if (absFlow < 10) {
-      continue;
-    }
-    players.addPlayer(r.p1);
-    players.addPlayer(r.p2);
     edges.push({
       data : {
         source: r.flow < 0 ? r.p1 : r.p2,
@@ -47,6 +36,20 @@ function elements(data) {
       }
     });
   }
+  edges.sort(function(a, b) { return b.strength - a.strength });
+  edges = edges.slice(0, Math.min(edges.length, 32));
+
+  var players = [];
+  players.addPlayer = function(p) {
+    if (players.indexOf(p) === -1) {
+      players.push(p);
+    }
+  };
+  edges.forEach(function(e) {
+    players.addPlayer(e.data.source);
+    players.addPlayer(e.data.target);
+  });
+
   var nodes = [];
   players.forEach(function(p) {
     nodes.push({
