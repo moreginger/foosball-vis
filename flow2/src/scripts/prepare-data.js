@@ -31,7 +31,8 @@ exports.prepareData = function(data) {
       }
     });
   }
-  edges.sort(function(a, b) { return b.strength - a.strength });
+  edges.sort(function(a, b) { return b.data.strength - a.data.strength });
+  console.log(edges);
   edges = edges.slice(0, Math.min(edges.length, 32));
 
   var players = [];
