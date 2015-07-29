@@ -62,8 +62,6 @@ exports.prepareData = function(data) {
     nodes: nodes,
     edges: edges
   };
-  console.log("whee");
-  console.log(result);
 
   return result;
 }

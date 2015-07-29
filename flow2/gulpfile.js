@@ -19,7 +19,7 @@ gulp.task('browser-sync', function() {
 });
 
 gulp.task('compass', function() {
-  return gulp.src('./src/stylesheets/**/*.{scss,sass}')
+  return gulp.src('src/stylesheets/**/*.{scss,sass}')
     .pipe($.plumber())
     .pipe($.compass({
       css: 'dist/stylesheets',
@@ -28,6 +28,13 @@ gulp.task('compass', function() {
     .pipe(gulp.dest('dist/stylesheets'));
 });
 
+gulp.task('css', function() {
+  return gulp.src([
+    'node_modules/ion-rangeslider/css/ion.rangeSlider.css',
+    'node_modules/ion-rangeslider/css/ion.rangeSlider.skinFlat.css'
+  ]).pipe($.plumber())
+    .pipe(gulp.dest('dist/stylesheets'));
+});
 
 gulp.task('js', function() {
   return gulp.src('src/scripts/main.js')
@@ -61,11 +68,13 @@ gulp.task('clean', function(cb) {
 });
 
 gulp.task('images', function() {
-  return gulp.src('./src/images/**/*')
-    .pipe($.imagemin({
+  return gulp.src([
+      'src/images/**/*',
+      'node_modules/ion-rangeslider/img/sprite-skin-flat.png'
+    ]).pipe($.imagemin({
       progressive: true
     }))
-    .pipe(gulp.dest('./dist/images'))
+    .pipe(gulp.dest('./dist/img'))
 })
 
 gulp.task('templates', function() {
@@ -76,12 +85,16 @@ gulp.task('templates', function() {
 
 
 
-gulp.task('build', ['compass', 'js', 'legacyjs', 'templates', 'images']);
+gulp.task('build', ['css', 'compass', 'js', 'legacyjs', 'templates', 'images']);
 
 gulp.task('serve', ['build', 'browser-sync'], function () {
   gulp.watch('src/stylesheets/**/*.{scss,sass}',['compass', reload]);
+  gulp.watch('node_modules/**/*.{css}',['css', reload]);
   gulp.watch('src/scripts/**/*.js',['js', reload]);
-  gulp.watch('src/images/**/*',['images', reload]);
+  gulp.watch([
+    'src/images/**/*',
+    'node_modules/**/*.png'
+  ],['images', reload]);
   gulp.watch('src/*.html',['templates', reload]);
 });
 

@@ -23,6 +23,8 @@
     "yargs": "^3.9.0"
   },
   "dependencies": {
-    "cytoscape": "~2.4.4"
+    "cytoscape": "~2.4.4",
+    "ion-rangeslider": "~2.0.13",
+    "moment": "~2.10.6"
   }
 }
