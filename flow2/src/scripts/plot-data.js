@@ -2,6 +2,7 @@ require('cytoscape');
 // TODO npm:webcola isn't in a usable state, needs build etc, doesn't support commonjs style.
 // require('webcola')
 // require('./cola.v3.js')
+var prep = require('./prepare-data.js')
 
 exports.plotData = function(e, elements) {
 
