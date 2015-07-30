@@ -2,7 +2,7 @@ require('cytoscape');
 // TODO npm:webcola isn't in a usable state, needs build etc, doesn't support commonjs style.
 // require('webcola')
 // require('./cola.v3.js')
-var prep = require('./prepare-data.js')
+var prep = require('./prepare-data.js');
 
 exports.plotData = function(e, elements) {
 
@@ -75,9 +75,36 @@ exports.plotData = function(e, elements) {
 
     ready: function(){
       window.cy = this;
-
-      // giddy up
     }
   });
 
+}
+
+exports.updateData = function(elements) {
+  var cy = window.cy;
+  var newNodes = elements.nodes.map(function(n) {
+    return n.data.id;
+  })
+  cy.remove(cy.nodes().filter(function(_, n) {
+    return newNodes.indexOf(n.data('id')) === -1;
+  }));
+  var currentNodes = cy.nodes().toArray().map(function(n) {
+    return n.data('id');
+  });
+  cy.add(elements.nodes.filter(function(n) {
+    return currentNodes.indexOf(n.data.id) === -1;
+  }).map(function(n) {
+    return {
+      group: 'nodes',
+      data: n.data
+    }
+  }));
+  cy.remove(cy.edges());
+  cy.add(elements.edges.map(function(e) {
+    return {
+      group: 'edges',
+      data: e.data
+    };
+  }));
+  cy.layout();
 }

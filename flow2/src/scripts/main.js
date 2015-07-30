@@ -28,7 +28,7 @@ jQuery('#range').ionRangeSlider({
   onFinish: function (data) {
     tntfl.getGames(data.from, data.to, function(data) {
       var elements = prep.prepareData(data);
-      plot.plotData(container, elements);
+      plot.updateData(elements);
     });
   }
 });
