@@ -15,22 +15,28 @@ exports.prepareData = function(data) {
   });
 
   var edges = [];
+  var maxFlow = 0;
   for (var key in rels) {
     // TODO: remove stupid hack. Added method isOwnProperty so we need to skip.
     if (!rels.hasOwnProperty(key) || key === "getRel") {
       continue;
     }
     var r = rels[key];
-    var absFlow = Math.abs(r.flow);
+    var flow = Math.abs(r.flow);
+    maxFlow = Math.max(flow, maxFlow);
     edges.push({
       data : {
         source: r.flow < 0 ? r.p1 : r.p2,
         target: r.flow < 0 ? r.p2 : r.p1,
-        strength: 4 * absFlow,
+        flow: flow,
         faveColor: '#6FB1FC'
       }
     });
   }
+  edges.forEach(function(e) {
+    e.data.strength = 100 * e.data.flow / maxFlow;
+    console.log([e.data.strength, e.data.source, e.data.target]);
+  });
   edges.sort(function(a, b) { return b.data.strength - a.data.strength });
   edges = edges.slice(0, Math.min(edges.length, 32));
 

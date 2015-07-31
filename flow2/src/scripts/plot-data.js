@@ -36,7 +36,7 @@ exports.plotData = function(e, elements) {
       .selector('edge')
         .css({
           'opacity': 0.666,
-          'width': 'mapData(strength, 70, 100, 2, 6)',
+          'width': 'mapData(strength, 0, 100, 2, 10)',
           'target-arrow-shape': 'triangle',
           'line-color': 'data(faveColor)',
           'source-arrow-color': 'data(faveColor)',
