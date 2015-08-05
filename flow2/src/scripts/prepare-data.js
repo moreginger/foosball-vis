@@ -1,14 +1,14 @@
-exports.prepareData = function(data) {
+exports.prepareData = data => {
   var rels = {};
 
-  rels.getRel = function(p1, p2) {
+  rels.getRel = (p1, p2) => {
     var name = p1 > p2 ? p1 + ":" + p2 : p2 + ":" + p1;
     if (!(name in rels)) {
       rels[name] = { p1: p1, p2: p2, flow: 0 };
     }
     return rels[name];
   };
-  data.forEach(function(g) {
+  data.forEach(g => {
     var rel = rels.getRel(g.red.name, g.blue.name);
     var flow = g.red.name === rel.p1 ? g.red.skillChange : -g.red.skillChange;
     rel.flow += flow;
@@ -33,34 +33,33 @@ exports.prepareData = function(data) {
       }
     });
   }
-  edges.forEach(function(e) {
+  edges.forEach(e => {
     e.data.strength = 100 * e.data.flow / maxFlow;
     console.log([e.data.strength, e.data.source, e.data.target]);
   });
-  edges.sort(function(a, b) { return b.data.strength - a.data.strength });
+  edges.sort((a, b) => b.data.strength - a.data.strength );
   edges = edges.slice(0, Math.min(edges.length, 32));
 
   var players = [];
-  players.addPlayer = function(p) {
+  players.addPlayer = p => {
     if (players.indexOf(p) === -1) {
       players.push(p);
     }
   };
-  edges.forEach(function(e) {
+  edges.forEach(e => {
     players.addPlayer(e.data.source);
     players.addPlayer(e.data.target);
   });
 
-  var nodes = [];
-  players.forEach(function(p) {
-    nodes.push({
+  var nodes = players.map(p => {
+    return {
       data : {
         id: p,
         name: p,
         weight: 60,
         faveColor: '#6FB1FC'
       }
-    });
+    };
   });
 
   var result = {

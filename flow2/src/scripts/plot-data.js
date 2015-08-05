@@ -80,31 +80,19 @@ exports.plotData = function(e, elements) {
 
 }
 
-exports.updateData = function(elements) {
+exports.updateData = elements => {
   var cy = window.cy;
-  var newNodes = elements.nodes.map(function(n) {
-    return n.data.id;
-  })
-  cy.remove(cy.nodes().filter(function(_, n) {
-    return newNodes.indexOf(n.data('id')) === -1;
-  }));
-  var currentNodes = cy.nodes().toArray().map(function(n) {
-    return n.data('id');
-  });
-  cy.add(elements.nodes.filter(function(n) {
-    return currentNodes.indexOf(n.data.id) === -1;
-  }).map(function(n) {
-    return {
-      group: 'nodes',
-      data: n.data
-    }
-  }));
+  var newNodes = elements.nodes.map(n => n.data.id);
+  cy.remove(cy.nodes().filter((_, n) => newNodes.indexOf(n.data('id')) === -1));
+  var currentNodes = cy.nodes().toArray().map(n => n.data('id'));
+  cy.add(elements.nodes.filter(n => currentNodes.indexOf(n.data.id) === -1).map(n => ({
+    group: 'nodes',
+    data: n.data
+  })));
   cy.remove(cy.edges());
-  cy.add(elements.edges.map(function(e) {
-    return {
-      group: 'edges',
-      data: e.data
-    };
-  }));
+  cy.add(elements.edges.map(e => ({
+    group: 'edges',
+    data: e.data
+  })));
   cy.layout();
 }
