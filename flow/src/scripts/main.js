@@ -1,11 +1,10 @@
-// this is the main file that pulls in all other modules
-// you can require() bower components too!
-var prep = require('./prepare-data.js');
-var plot = require('./plot-data.js');
-var tntfl = require('./tntfl-games.js');
+
+import * as prep from './prepare-data';
+import * as plot from './plot-data';
+import * as tntfl from './tntfl-games';
 global.jQuery = require('jquery');
-require('ion-rangeslider');
-var moment = require('moment');
+import 'ion-rangeslider';
+import moment from 'moment';
 var now = moment();
 var start = moment(now).subtract(2, 'months');
 
