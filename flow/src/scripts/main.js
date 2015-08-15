@@ -1,7 +1,12 @@
 
 import * as prep from './prepare-data';
+<<<<<<< Updated upstream
 import * as plot from './plot-data';
 import * as tntfl from './tntfl-games';
+=======
+var plot = require('./plot-data.js');
+var tntfl = require('./tntfl-games.js');
+>>>>>>> Stashed changes
 global.jQuery = require('jquery');
 import 'ion-rangeslider';
 import moment from 'moment';

@@ -1,4 +1,4 @@
-exports.prepareData = data => {
+export function prepareData(data) {
   var rels = {};
 
   rels.getRel = (p1, p2) => {
