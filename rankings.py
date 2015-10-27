@@ -34,15 +34,15 @@ class Player:
         self.retire_seconds = retire_seconds
         self.lead_in_seconds = lead_in_seconds
         self.elo = 0.0
-        self.most_recent_game = None
+        self.most_recent_game_time = None
         self.rankings = []
 
     def game(self, delta, time):
         self.elo += delta
-        self.most_recent_game = time
+        self.most_recent_game_time = time
 
     def is_active(self, time):
-        return time - self.most_recent_game < self.retire_seconds
+        return time - self.most_recent_game_time < self.retire_seconds
 
     def is_retired(self):
         return not self.rankings or self.rankings[-1].ranking == -1
@@ -146,17 +146,7 @@ class Analysis:
             return player
 
     def game_played(self, game):
-        players_by_retirement = defaultdict(set)
-        for retired_player in [p for p in self.players.values() if not p.is_active(game.time) and not p.is_retired()]:
-            players_by_retirement[retired_player.most_recent_game].add(retired_player)
-
-        for most_recent_game in sorted(players_by_retirement.keys()):
-            time = most_recent_game + self.retire_seconds
-            retired_players = players_by_retirement[most_recent_game]
-            for retired_player in retired_players:
-                retired_player.retire(time - self.lead_in_seconds)
-            retired_player_names = set([p.name for p in retired_players])
-            self.update_rankings(time, sorted([p for p in self.players.values() if p.is_active(time) and p.name not in retired_player_names], key=lambda x: x.elo, reverse=True))
+        self.retire_players(game.time)
 
         blue = self.get_player(game.blue_player)
         red = self.get_player(game.red_player)
@@ -170,6 +160,19 @@ class Analysis:
 
         self.update_rankings(game.time, sorted([p for p in self.players.values() if p.is_active(game.time)], key=lambda x: x.elo, reverse=True))
 
+    def retire_players(self, current_time):
+        players_by_retirement = defaultdict(set)
+        for retired_player in [p for p in self.players.values() if not p.is_active(current_time) and not p.is_retired()]:
+            players_by_retirement[retired_player.most_recent_game_time].add(retired_player)
+
+        for most_recent_game_time in sorted(players_by_retirement.keys()):
+            time = most_recent_game_time + self.retire_seconds
+            retired_players = players_by_retirement[most_recent_game_time]
+            for retired_player in retired_players:
+                retired_player.retire(time - self.lead_in_seconds)
+            retired_player_names = set([p.name for p in retired_players])
+            self.update_rankings(time, sorted([p for p in self.players.values() if p.is_active(time) and p.name not in retired_player_names], key=lambda x: x.elo, reverse=True))
+
     def update_rankings(self, time, ranked_players):
         rank = 1
         for player in ranked_players:
@@ -177,6 +180,7 @@ class Analysis:
             rank +=1
 
     def flush_games(self, now):
+        self.retire_players(now)
         for player in self.players.values():
             player.write_final_rank(now)
 
@@ -185,11 +189,11 @@ class RankingsEncoder(json.JSONEncoder):
 
     def __init__(self, now):
         super(RankingsEncoder, self).__init__()
-        self.now = now 
+        self.now = now
 
     def default(self, obj):
         if isinstance(obj, Player):
-            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'active': obj.is_active(self.now), 'data': obj.rankings, 'last': obj.most_recent_game * 1000}
+            return {'label': obj.name, 'elo': '{0:.3f}'.format(obj.elo), 'active': obj.is_active(self.now), 'data': obj.rankings, 'last': obj.most_recent_game_time * 1000}
         if isinstance(obj, Ranking):
             return [obj.time * 1000, obj.ranking] if obj.ranking != -1 else None
         else:
