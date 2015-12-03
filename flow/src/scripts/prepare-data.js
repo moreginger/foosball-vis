@@ -35,7 +35,6 @@ export function prepareData(data) {
   }
   edges.forEach(e => {
     e.data.strength = 100 * e.data.flow / maxFlow;
-    console.log([e.data.strength, e.data.source, e.data.target]);
   });
   edges.sort((a, b) => b.data.strength - a.data.strength );
   edges = edges.slice(0, Math.min(edges.length, 32));
