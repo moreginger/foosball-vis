@@ -1,5 +1,5 @@
 export function getGames(from, to, callback) {
-  var url = 'http://localhost:8000/games.cgi?view=json&from=' + from + '&to=' + to;
+  var url = 'https://www.int.corefiling.com/~tlr/tntfl/games.cgi?view=json&from=' + from + '&to=' + to;
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.onload = function() {
