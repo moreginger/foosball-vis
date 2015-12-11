@@ -8,7 +8,6 @@ class League extends Component {
     this.state = {
       tab: 1
     };
-    //this.handleSelect = this.handleSelect.bind(this); // Weird
   }
 
   handleSelect = (selectedKey) => {
