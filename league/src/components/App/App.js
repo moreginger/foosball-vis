@@ -5,8 +5,7 @@ import styles from './App.css';
 import withContext from '../../decorators/withContext';
 import withStyles from '../../decorators/withStyles';
 import Header from '../Header';
-import Feedback from '../Feedback';
-import Footer from '../Footer';
+import League from '../League';
 
 @withContext
 @withStyles(styles)
@@ -21,9 +20,7 @@ class App extends Component {
     return !this.props.error ? (
       <div>
         <Header />
-        {this.props.children}
-        <Feedback />
-        <Footer />
+        <League />
       </div>
     ) : this.props.children;
   }

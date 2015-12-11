@@ -1,0 +1,6 @@
+{
+  "name": "League",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./League.js"
+}
