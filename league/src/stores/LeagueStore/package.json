@@ -1,0 +1,6 @@
+{
+  "name": "LeagueStore",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./LeagueStore.js"
+}

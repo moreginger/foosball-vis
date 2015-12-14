@@ -1,6 +1,12 @@
+import { LeagueActions } from '../../actions/LeagueActions';
+import { LeagueStore } from '../../stores/LeagueStore';
+
 import React, { PropTypes, Component } from 'react';
 import { Nav, NavItem } from 'react-bootstrap';
 import LeagueTable from '../LeagueTable';
+
+console.log(LeagueActions);
+LeagueActions.load();
 
 class League extends Component {
 
@@ -17,7 +23,7 @@ class League extends Component {
       }]
     };
   }
-  
+
   handleSelect = (selectedKey) => {
     this.setState({
       tab: selectedKey
